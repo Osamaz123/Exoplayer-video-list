@@ -2,17 +2,23 @@ package com.example.exoplayr
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
+
 import androidx.viewpager2.widget.ViewPager2
 import com.example.exoplayr.databinding.ActivityMainBinding
-import com.google.android.exoplayer2.util.Util
+
 
 class MainActivity : AppCompatActivity() {
 
+    // binding variable for the layout
     private lateinit var binding: ActivityMainBinding
 
+
     private lateinit var adapter: VideoAdapter
+
+    // list for videos
     private val videos = ArrayList<Video>()
+
+    // list for exoplayer items
     private val exoPlayerItems = ArrayList<ExoPlayerItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // adding videos to the list
         videos.add(
             Video(
                 "Nature",
@@ -48,6 +55,7 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
+        //setting the adapter
         adapter = VideoAdapter(this, videos, object : VideoAdapter.OnVideoPreparedListener {
             override fun onVideoPrepared(exoPlayerItem: ExoPlayerItem) {
                 exoPlayerItems.add(exoPlayerItem)
@@ -56,14 +64,19 @@ class MainActivity : AppCompatActivity() {
 
         binding.viewPager2.adapter = adapter
 
+
+        // registering callback for page change
         binding.viewPager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
+                // pausing the previous video that was playing
                 val previousIndex = exoPlayerItems.indexOfFirst { it.exoPlayer.isPlaying }
                 if (previousIndex != -1) {
                     val player = exoPlayerItems[previousIndex].exoPlayer
                     player.pause()
                     player.playWhenReady = false
                 }
+
+                // playing the new video
                 val newIndex = exoPlayerItems.indexOfFirst { it.position == position }
                 if (newIndex != -1) {
                     val player = exoPlayerItems[newIndex].exoPlayer
@@ -77,6 +90,8 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
+        // pausing the video when the activity is paused
+
         val index = exoPlayerItems.indexOfFirst { it.position == binding.viewPager2.currentItem }
         if (index != -1) {
             val player = exoPlayerItems[index].exoPlayer
@@ -87,7 +102,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
+// resuming the video when the activity is resumed
         val index = exoPlayerItems.indexOfFirst { it.position == binding.viewPager2.currentItem }
         if (index != -1) {
             val player = exoPlayerItems[index].exoPlayer
@@ -98,14 +113,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Stopping and clearing the media items when the activity is destroyed
         if (exoPlayerItems.isNotEmpty()) {
             for (item in exoPlayerItems) {
                 val player = item.exoPlayer
                 player.stop()
                 player.clearMediaItems()
             }
-        }else{
-            Toast.makeText(this, "Can't play this video", Toast.LENGTH_SHORT).show()
         }
     }
 }

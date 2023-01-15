@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.exoplayr.databinding.ListVideoBinding
-//import com.example.viewpager2withexoplayer.databinding.ListVideoBinding
+
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
@@ -17,23 +17,29 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 class VideoAdapter(
-    var context: Context,
-    var videos: ArrayList<Video>,
-    var videoPreparedListener: OnVideoPreparedListener
+
+    //context of the activity
+    private var context: Context,
+    private var videos: ArrayList<Video>,
+
+    // listener for when video is prepared
+    private var videoPreparedListener: OnVideoPreparedListener
 ) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
 
     class VideoViewHolder(
-        val binding: ListVideoBinding,
+        val binding: ListVideoBinding,  // reference to the layout binding
         var context: Context,
-        var videoPreparedListener: OnVideoPreparedListener
+        private var videoPreparedListener: OnVideoPreparedListener
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private lateinit var exoPlayer: ExoPlayer
         private lateinit var mediaSource: MediaSource
 
         fun setVideoPath(url: String) {
-
+            // initialize ExoPlayer
             exoPlayer = ExoPlayer.Builder(context).build()
+
+            // add listeners for error and buffering events
             exoPlayer.addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
                     super.onPlayerError(error)
@@ -49,8 +55,10 @@ class VideoAdapter(
                 }
             })
 
+            // set the ExoPlayer as the player for the playerView in the binding
             binding.playerView.player = exoPlayer
 
+            // set up the ExoPlayer
             exoPlayer.seekTo(0)
             exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
 
@@ -62,11 +70,13 @@ class VideoAdapter(
             exoPlayer.setMediaSource(mediaSource)
             exoPlayer.prepare()
 
+            // start playing the first video
             if (absoluteAdapterPosition == 0) {
                 exoPlayer.playWhenReady = true
                 exoPlayer.play()
             }
 
+            // notify the listener that the video is prepared
             videoPreparedListener.onVideoPrepared(ExoPlayerItem(exoPlayer, absoluteAdapterPosition))
         }
     }
@@ -75,6 +85,7 @@ class VideoAdapter(
         val view = ListVideoBinding.inflate(LayoutInflater.from(context), parent, false)
         return VideoViewHolder(view, context, videoPreparedListener)
     }
+
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val model = videos[position]
@@ -87,6 +98,7 @@ class VideoAdapter(
         return videos.size
     }
 
+    // listens for when a video is prepared and returns an ExoPlayerItem object
     interface OnVideoPreparedListener {
         fun onVideoPrepared(exoPlayerItem: ExoPlayerItem)
     }
